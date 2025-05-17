@@ -4,6 +4,7 @@ from django.conf import settings
 import requests
 from datetime import datetime, timezone
 from rest_framework.response import Response
+from .models import Project
 
 # Create your views here.
 class ProjectsToBid(APIView):
@@ -41,6 +42,22 @@ class ProjectsToBid(APIView):
                         'bid_count': bid_count,
                         'bid_avg': project.get("bid_stats", {}).get("bid_avg", 0),
                     })
+
+                    ## Save the project to the database
+                    Project.objects.update_or_create(
+                        id=project['id'],
+                        defaults={
+                            'owner_id': project['owner_id'],
+                            'title': project['title'],
+                            'url': final_url,
+                            'description': project['description'],
+                            'currency': project['currency']['sign'],
+                            'created': created,
+                            'age_minutes': age_minutes,
+                            'bid_count': bid_count,
+                            'bid_avg': project.get("bid_stats", {}).get("bid_avg", 0),
+                        }
+                    )
             
             return Response({'projects_to_bid': filtered}, status=200)
 
